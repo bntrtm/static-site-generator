@@ -13,11 +13,11 @@ from htmlnode import *
 from conversions import *
 from generation import *
 
-# save root, content, static, & public directories for use in function definitions
+# save root, content, static, & docs directories for use in function definitions
 root_dir = os.getcwd()
 content_path = os.path.join(root_dir, 'content')
 static_dir = os.path.join(root_dir, 'static')
-public_dir = os.path.join(root_dir, 'public')
+docs_dir = os.path.join(root_dir, 'docs')
 # save path to default template, located in the root directory
 template_path = os.path.join(root_dir, 'template.html')
 
@@ -67,20 +67,20 @@ def generate_pages_recursive(path, generate_dir):
             if os.path.exists(theoretical_template_path):
                 # if there exists a template more specific to this webpage, use that in lieu of default
                 template = theoretical_template_path
-            # set a generation path for 'index.html' in ./public that mirrors 'index.md' seen in ./content
+            # set a generation path for 'index.html' in ./docs that mirrors 'index.md' seen in ./content
             relpath = os.path.dirname(path).replace(content_path, '').lstrip('/')
             generation_path = os.path.join(generate_dir, relpath, 'index.html')
-            # Generate a page from ./content/.../index.md using ./template.html and write the result to ./public/.../index.html
-            generate_page(path, template, generation_path, basepath=args.basepath)
+            # Generate a page from ./content/.../index.md using ./template.html and write the result to ./docs/.../index.html
+            generate_page(path, template, generation_path, basepath=args.basepath[0])
 
 def main():
-    print(args.basepath)
-    copy_dir(static_dir, public_dir, b_clean=True)
+    print(args.basepath[0])
+    copy_dir(static_dir, docs_dir, b_clean=True)
     # parse arguments to determine whether we should disable pretty printing
     HTMLNode.should_pretty_print = args.pretty
     if args.pretty:
         print(f'Using pretty printing...')
-    # find all 'index.md' and relevant 'template.html' files in the content directory and generate 'index.html' files within the public directory
-    generate_pages_recursive(content_path, public_dir)
+    # find all 'index.md' and relevant 'template.html' files in the content directory and generate 'index.html' files within the docs directory
+    generate_pages_recursive(content_path, docs_dir)
 
 main()
