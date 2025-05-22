@@ -1,6 +1,6 @@
 # Why Glorfindel is More Impressive than Legolas
 
-[< Back Home](/)
+[< Back Home](/sites/tolkien)
 
 ![Glorfindel image](/images/glorfindel.png)
 

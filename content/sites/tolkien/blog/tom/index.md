@@ -1,6 +1,6 @@
 # Why Tom Bombadil Was a Mistake
 
-[< Back Home](/)
+[< Back Home](/sites/tolkien)
 
 ![Tom Bombadil image](/images/tom.png)
 
