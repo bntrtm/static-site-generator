@@ -1,7 +1,19 @@
 import re
-from blocks import BlockType
 from textnode import *
 from htmlnode import *
+from enum import Enum
+
+# ===================================
+# ======== EXCLUSIVE CLASSES ========
+# ===================================
+
+class BlockType(Enum):
+    PARAGRAPH = "paragraph"
+    HEADING = "heading"
+    CODE = "code"
+    QUOTE = "quote"
+    ULIST = "unordered_list"
+    OLIST = "ordered_list"
 
 # ==================================
 # ======== HELPER FUNCTIONS ========
@@ -21,9 +33,13 @@ def extract_markdown_links(md_text):
 # ========= NODE CONVERSION =========
 # ===================================
 
-# split a markdown block (interpreted as a TextNode with text_type: TextType.TEXT)
-# into multiple html blocks (TextNodes of TextType.TEXT and TextType.{?}, '?' dependent on input delimiter)
 def split_nodes_delimiter(old_nodes, delimiter, text_type):
+    '''Split a markdown block into multiple html blocks within the boundaries of a given delimiter
+
+    The markdown block is interpreted as a TextNode with the enum text_type: TextType.TEXT.
+    The 'html blocks' are TextNodes of TextType.TEXT OR of TextType.{?}, where '?' is dependent on
+    a the input parameter text_type, which should be defined by what the corresponding delimiter is.
+    '''
     new_nodes = []
     for node in old_nodes:
         if node.text_type == TextType.TEXT and delimiter in node.text:
@@ -44,6 +60,8 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
 
 def split_nodes_image(old_nodes):
+    '''Reinterprets markdown image syntax as HTML image syntax
+    '''
     new_nodes = []
     for node in old_nodes:
         if node.text_type == TextType.IMAGE:
@@ -72,6 +90,8 @@ def split_nodes_image(old_nodes):
 
 
 def split_nodes_link(old_nodes):
+    '''Reinterprets markdown image syntax as HTML image syntax
+    '''
     new_nodes = []
     for node in old_nodes:
         if node.text_type == TextType.LINK:
@@ -98,8 +118,9 @@ def split_nodes_link(old_nodes):
             new_nodes.append(node)
     return new_nodes
 
-# takes in a text string and, dependent on a variety of delimiters for each TextType, returns a list of TextNode objects
 def text_to_textnodes(text):
+    '''Interprets input text string as one giant TextNode of TextType.TEXT, then splits it into multiple TextNodes at images, links, & delimiters
+    '''
     old_nodes = []
     old_nodes.append(TextNode(text, TextType.TEXT))
     
@@ -120,8 +141,9 @@ def text_to_textnodes(text):
 # ======== BLOCK CONVERSION ========
 # ==================================
 
-# based on formatting, interprets the BlockType given a markdown block
 def block_to_block_type(md_block):
+    '''Dependent on expected markdown conventions, interprets the enum BlockType of a markdown block
+    '''
     if bool(re.search("#{1,6} ", md_block[0:7])):
         return BlockType.HEADING
     if md_block.startswith("```") and md_block.endswith("```"):
@@ -140,32 +162,35 @@ def block_to_block_type(md_block):
         return BlockType.OLIST
     return BlockType.PARAGRAPH
 
-# based on the input BlockType, removes markdown formatting from a markdown block to return text the intended text value
 def block_to_block_text(md_block):
+    '''Based on the input BlockType, removes markdown formatting from a markdown block to return the intended text value
+    '''
     # determine block type
-        block_type = block_to_block_type(md_block)
-        match block_type:
-            case BlockType.PARAGRAPH:
-                # browsers will handle newlines
-                return ' '.join(md_block.split('\n'))
-            case BlockType.CODE:
-                # newlines in code blocks must be preserved, but not the ones off the beginning and end
-                # the following should skip the first three backticks ``` and first newline, and include characters all the way up to the final newline
-                return md_block[4:-3]
-                # return '\n'.join(list(map(lambda x: x.strip('`'), md_block.split('\n')))[1:-1:1])
-            case BlockType.QUOTE:
-                # browsers will render newlines where appropriate for quotes blocks, just like paragraph blocks 
-                return ' '.join(list(map(lambda x: x.lstrip('> '), md_block.split('\n'))))
-            case BlockType.HEADING:
-                # Headings shouldn't have any newlines whatsoever to worry about
-                return md_block.lstrip('# ')
-                #return '\n'.join(list(map(lambda x: x.lstrip('# '), md_block.split('\n'))))
-            case _:
-                raise ValueError(f'Enum input "{block_type}" not valid for function "block_to_block_text"')
+    block_type = block_to_block_type(md_block)
+    match block_type:
+        case BlockType.PARAGRAPH:
+            # browsers will handle newlines
+            return ' '.join(md_block.split('\n'))
+        case BlockType.CODE:
+            # newlines in code blocks must be preserved, but not the ones off the beginning and end
+            # the following should skip the first three backticks ``` and first newline, and include characters all the way up to the final newline
+            return md_block[4:-3]
+            # return '\n'.join(list(map(lambda x: x.strip('`'), md_block.split('\n')))[1:-1:1])
+        case BlockType.QUOTE:
+            # browsers will render newlines where appropriate for quotes blocks, just like paragraph blocks 
+            return ' '.join(list(map(lambda x: x.lstrip('> '), md_block.split('\n'))))
+        case BlockType.HEADING:
+            # Headings shouldn't have any newlines whatsoever to worry about
+            return md_block.lstrip('# ')
+            #return '\n'.join(list(map(lambda x: x.lstrip('# '), md_block.split('\n'))))
+        case _:
+            raise ValueError(f'Enum input "{block_type}" not valid for function "block_to_block_text"')
 
-# takes the text of a markdown block and generates a list of LeafNode, html-type children
-# equivalent to the boot.dev function "text_to_children(text)"
 def generate_leaf_nodes_from_block_text(md_block_text):
+    '''Given a markdown block, construct multiple HTMLNode objects to represent varying font styles or text formatting (italics, bold, lists, etc)
+    
+    This function is the equivalent to the boot.dev course's function: "text_to_children(text)".
+    '''
     child_html_nodes = []
     text_nodes = text_to_textnodes(md_block_text)
     for node in text_nodes:
@@ -173,23 +198,25 @@ def generate_leaf_nodes_from_block_text(md_block_text):
     return child_html_nodes
             
 def block_to_html_node(md_block):
+    '''Perform markdown-to-HTML conversion based on enum BlockType
+    '''
     # determine block type
-        block_type = block_to_block_type(md_block)
-        match block_type:
-            case BlockType.PARAGRAPH:
-                return paragraph_to_html_node(md_block)
-            case BlockType.CODE:
-                return code_to_html_node(md_block)
-            case BlockType.QUOTE:
-                return quote_to_html_node(md_block)
-            case BlockType.HEADING:
-                return heading_to_html_node(md_block)
-            case BlockType.ULIST:
-                return ulist_to_html_node(md_block)
-            case BlockType.OLIST:
-                return olist_to_html_node(md_block)
-            case _:
-                raise ValueError(f'Enum input "{block_type}" not valid for function "block_to_html_node"')
+    block_type = block_to_block_type(md_block)
+    match block_type:
+        case BlockType.PARAGRAPH:
+            return paragraph_to_html_node(md_block)
+        case BlockType.CODE:
+            return code_to_html_node(md_block)
+        case BlockType.QUOTE:
+            return quote_to_html_node(md_block)
+        case BlockType.HEADING:
+            return heading_to_html_node(md_block)
+        case BlockType.ULIST:
+            return ulist_to_html_node(md_block)
+        case BlockType.OLIST:
+            return olist_to_html_node(md_block)
+        case _:
+            raise ValueError(f'Enum input "{block_type}" not valid for function "block_to_html_node"')
 
 def paragraph_to_html_node(block):
     block_text = block_to_block_text(block)
@@ -208,9 +235,11 @@ def quote_to_html_node(block):
     return node
 
 def heading_to_html_node(block):
+    '''Return an HTML heading tag
 
-    # intakes a markdown block, and, so long as it is of type BlockType.HEADING, 
-    # returns a heading tag string based on the number of leading # symbols
+    Input "block" must be of type BlockType.HEADING.
+    The heading tag string is based on the number of leading '#' symbols
+    '''
     def interpret_heading_size():
         return f"h{block[0:6].count('#')}"
 
@@ -244,10 +273,18 @@ def olist_to_html_node(block):
 # =====================================
 
 def markdown_to_blocks(md):
+    '''Interpret every line break within a markdown document as a divisor between two 'markdown blocks'
+    '''
     return list(filter(lambda x: x != '', list(map( lambda x: x.strip(), md.split('\n\n')))))
 
 # converts a full markdown document into a single parent HTMLNode containing any relevant child ParentNode's and LeafNodes
 def markdown_to_html_node(md):
+    '''Top-level function generates HTMLNode given a markdown document 'md'
+
+    1) Establishes an HTMLNode ParentNode object; all contents of the conversion will be placed within a <div></div> tag.
+    2) Generates markdown blocks for the program to break down further for conversion.
+    3) Returns a tree of HTMLNode objects representing all interpreted images, links, & text with appropriate emphasis.
+    '''
     div_html = ParentNode("div", children=[], props=None, nest_depth=3)
     # generate blocks from the full doc
     blocks = markdown_to_blocks(md)

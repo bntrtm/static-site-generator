@@ -2,6 +2,8 @@ from enum import Enum
 from htmlnode import *
 
 def text_node_to_html_node(text_node):
+    '''Matches a TextNode and its properties to an equivalent HTMLNode
+    '''
     match text_node.text_type:
         case TextType.TEXT:
             return LeafNode(tag=None, value=text_node.text)
@@ -28,6 +30,8 @@ class TextType(Enum):
     IMAGE = "image"
 
 class TextNode:
+    '''A means of containing a block of text within some class and pairing it with minimal properties, which can then be translated to an HTMLNode
+    '''
     def __init__(self, text, text_type, url=None):
         self.text = text
         self.text_type = text_type

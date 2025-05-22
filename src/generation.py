@@ -2,18 +2,22 @@ import os
 from conversions import markdown_to_html_node
 from htmlnode import *
 
-# rewrites the cwd within the input path as '.' if present, for easier reading
 def omit_cd(path):
+    '''Rewrites the cwd within the input path as '.' if present, for easier reading
+    '''
     return path.replace(os.getcwd(), '.')
 
 def extract_title(md):
+    '''Extract the first line in the input markdown file as an h1 header for the webpage to generate
+    '''
     h1_header = md.split('\n', 1)[0]
     if not h1_header.startswith('# '):
         raise Exception('The first line in the input markdown file must be an h1 header.')
     return h1_header.lstrip('#').strip()
 
-# given an html file to use as a template, generates an HTML webpage using a markdown file and writes the result as dest_path.
 def generate_page(from_path, template_path, dest_path, basepath="/"):
+    '''Given an html file to use as a template, generates an HTML webpage using a markdown file and writes the result as dest_path
+    '''
     # check that the directory for dest_path (the path of the file to write) exists.
     if not os.path.exists(os.path.dirname(dest_path)):
         print(f'Write-To directory "{os.path.dirname(dest_path)}" does not exist. Making relevant directories now...')

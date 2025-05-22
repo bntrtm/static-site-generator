@@ -22,8 +22,9 @@ docs_dir = os.path.join(root_dir, 'docs')
 template_path = os.path.join(root_dir, 'template.html')
 
 
-# copies the contents of one directory to another, deleting any existing destination directory if desired
 def copy_dir(from_dir, to_dir, b_clean=False):
+    '''Copies the contents of one directory to another, deleting any existing destination directory, if desired.
+    '''
     # check that the from_dir is valid and has files to work with
     if not os.path.exists(from_dir):
         raise ValueError(f'Copy-From directory "{from_dir}" does not exist.')
@@ -52,9 +53,14 @@ def copy_dir(from_dir, to_dir, b_clean=False):
             # recursively copy over any subdirectories
             copy_dir(new_from_path, new_to_path)
 
-# given a path, checks if that path is an 'index.md' file. If so, use any relevant template to generate an 'index.html' file in the 'generate_dir/...' .
-# If the path is a directory, recursively generates htmls from any paths within it.
+
 def generate_pages_recursive(path, generate_dir):
+    '''Generates webpages from given path
+
+    Given a path, check that the path is an 'index.md' file. If so, use any relevant
+    template to generate an 'index.html' file in the 'generate_dir/...'. If the path
+    is a directory, recursively generates htmls from any paths within it.
+    '''
     if not os.path.isfile(path):
         subpaths = os.listdir(path)
         if len(subpaths) > 0:
